@@ -87,3 +87,26 @@ Se o widget não abrir, tente `python3 overlay.py` no terminal, para ver a mensa
 - [tokenreceipt](https://github.com/henrikdukefoss/tokenreceipt)
 
 Projeto independente; nenhum código de terceiros foi incorporado. Licenças/atribuições de eventuais modificações futuras devem ser verificadas antes de publicar o repositório.
+# Atualizações automáticas
+
+As distribuições extraídas do pacote `codex-pulse-update.zip` consultam a última
+Release estável de `EzekLobo/codex-pulse` ao abrir a janela ou o dashboard.
+Uma versão mais nova é instalada automaticamente antes de iniciar a interface.
+É necessário Python com Tkinter e permissão de escrita na pasta da aplicação.
+Preferências em `~/.codex-pulse` e logs do Codex são preservados.
+
+O atualizador exige o digest SHA-256 do asset informado pelo GitHub, rejeita
+pacotes incompletos e caminhos inesperados e restaura os arquivos anteriores
+quando uma substituição falha. Sem rede, continua na versão instalada.
+A verificação pode acrescentar alguns segundos à inicialização. Não ocorre
+atualização durante uma sessão aberta. Não execute várias instâncias na mesma pasta.
+Uma interrupção do sistema durante a substituição pode exigir reextrair o pacote.
+
+Checkouts com `.git` não são atualizados automaticamente. Para desativar em uma
+distribuição, defina `CODEX_PULSE_AUTO_UPDATE=0`.
+
+Para publicar: atualize `VERSION`, faça commit e envie uma tag correspondente,
+como `v3.1.0`. O workflow de release executa os testes, gera o pacote e publica
+o asset. As atualizações só estarão disponíveis depois que o código e a tag
+forem enviados ao GitHub. Não inclua chaves nem logs no pacote.
+

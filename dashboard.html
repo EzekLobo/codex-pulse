@@ -23,7 +23,7 @@
   </aside>
   <main class="main">
     <header class="topbar">
-      <div><div class="eyebrow"><span class="tiny-dot"></span> ANALYTICS / CODEX</div><h1 id="view-title">Visão geral</h1><p id="view-subtitle">Acompanhe tokens, custos equivalentes e atividade em tempo quase real.</p></div>
+      <div><div class="eyebrow"><span class="tiny-dot"></span> ANALYTICS / CODEX</div><h1 id="view-title">Visão geral</h1><p id="view-subtitle">Acompanhe limites, atividade e eficiência do seu workflow.</p></div>
       <div class="top-actions"><span class="updated" id="updated">—</span><button id="refresh" class="icon-button" title="Atualizar agora">↻</button><a class="primary-button" id="export" href="/api/export.csv" download>↓ Exportar CSV</a></div>
     </header>
     <div class="notice" id="demoNotice" hidden>◉ <b>Modo demonstração.</b> Todos os registros exibidos são sintéticos, não correspondem ao seu uso.</div>
@@ -35,6 +35,7 @@
       <button class="filter-reset" id="clear">Limpar filtros</button>
     </section>
     <section id="overview" class="page active">
+      <article class="panel"><div class="panel-head"><div><h2>Workflow e eficiência por modelo</h2><p>Avalie uma sessão por atividade e complexidade. Dados guardados neste navegador; demonstrações ficam separadas.</p></div></div><form id="activity-form" class="filters"><label>Sessão <select id="activity-session" required></select></label><label>Atividade <select id="activity-type"><option>Implementação</option><option>Correção de bugs</option><option>Investigação</option><option>Revisão</option><option>Testes</option><option>Documentação</option><option>Refatoração</option></select></label><label>Complexidade <select id="activity-complexity"><option>Baixa</option><option>Média</option><option>Alta</option></select></label><label>Resultado <select id="activity-result"><option value="accepted">Aceito</option><option value="rework">Retrabalho</option><option value="failed">Sem conclusão</option></select></label><button class="primary-button" type="submit">Salvar avaliação</button><button class="secondary-button" id="activity-export" type="button">Exportar avaliações</button></form><p id="activity-status" role="status"></p><div id="workflow-insights"></div><div id="activity-comparison"></div></article>
       <div class="kpis">
         <article class="kpi"><div class="kpi-top"><span>Tokens processados</span><span class="kpi-icon">◈</span></div><strong id="kpi-tokens">—</strong><small id="kpi-tokens-note">Entrada e saída</small></article>
         <article class="kpi"><div class="kpi-top"><span>Custo equivalente API</span><span class="kpi-icon">＄</span></div><strong id="kpi-cost">—</strong><small id="kpi-cost-note">Estimativa, não fatura real</small></article>
