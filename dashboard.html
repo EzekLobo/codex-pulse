@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark"><title>Codex Pulse — métricas</title>
+  <link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-logo"><span class="wave">◈</span></div><div><strong>Codex <span>Pulse</span></strong><small>Prompt observability</small></div></div>
+    <div class="side-section">WORKSPACE</div>
+    <nav id="navigation" class="navigation">
+      <button class="nav-link active" data-view="overview"><span>▦</span> Visão geral</button>
+      <button class="nav-link" data-view="prompts"><span>◫</span> Prompts</button>
+      <button class="nav-link" data-view="calls"><span>⌁</span> Chamadas</button>
+      <button class="nav-link" data-view="sessions"><span>◷</span> Sessões</button>
+    </nav>
+    <div class="side-section space-above">SISTEMA</div>
+    <div class="sidebar-status"><span class="live-dot"></span><span>Leitura local ativa</span></div>
+    <div class="sidebar-source" id="source">Verificando diretório…</div>
+    <div class="sidebar-bottom"><span class="shield">♢</span><div><strong>Local-first</strong><p>Seus logs não saem da máquina. Não exige chave de API.</p></div></div>
+  </aside>
+  <main class="main">
+    <header class="topbar">
+      <div><div class="eyebrow"><span class="tiny-dot"></span> ANALYTICS / CODEX</div><h1 id="view-title">Visão geral</h1><p id="view-subtitle">Acompanhe tokens, custos equivalentes e atividade em tempo quase real.</p></div>
+      <div class="top-actions"><span class="updated" id="updated">—</span><button id="refresh" class="icon-button" title="Atualizar agora">↻</button><a class="primary-button" id="export" href="/api/export.csv" download>↓ Exportar CSV</a></div>
+    </header>
+    <div class="notice" id="demoNotice" hidden>◉ <b>Modo demonstração.</b> Todos os registros exibidos são sintéticos, não correspondem ao seu uso.</div>
+    <section class="filters">
+      <label class="filter-label" for="period">Período <select id="period"><option value="1">Últimas 24 horas</option><option value="7" selected>Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="0">Todo o histórico local</option></select></label>
+      <label class="filter-label" for="project">Projeto <select id="project"><option value="">Todos os projetos</option></select></label>
+      <label class="filter-label" for="model">Modelo <select id="model"><option value="">Todos os modelos</option></select></label>
+      <label class="filter-label" for="search">Pesquisar <input id="search" type="search" placeholder="Prompt, sessão, modelo…" autocomplete="off"></label>
+      <button class="filter-reset" id="clear">Limpar filtros</button>
+    </section>
+    <section id="overview" class="page active">
+      <div class="kpis">
+        <article class="kpi"><div class="kpi-top"><span>Tokens processados</span><span class="kpi-icon">◈</span></div><strong id="kpi-tokens">—</strong><small id="kpi-tokens-note">Entrada e saída</small></article>
+        <article class="kpi"><div class="kpi-top"><span>Custo equivalente API</span><span class="kpi-icon">＄</span></div><strong id="kpi-cost">—</strong><small id="kpi-cost-note">Estimativa, não fatura real</small></article>
+        <article class="kpi"><div class="kpi-top"><span>Eficiência de cache</span><span class="kpi-icon">◎</span></div><strong id="kpi-cache">—</strong><small>Parte reutilizada dos tokens de entrada</small></article>
+        <article class="kpi"><div class="kpi-top"><span>Chamadas ao modelo</span><span class="kpi-icon">⌁</span></div><strong id="kpi-calls">—</strong><small id="kpi-calls-note">—</small></article>
+      </div>
+      <div class="graphs">
+        <article class="panel chart-panel"><div class="panel-head"><div><h2>Consumo no tempo</h2><p>Tokens por dia no período selecionado</p></div><span class="panel-tag">TOKENS / DIA</span></div><div class="line-chart" id="trend"><div class="empty">Carregando gráfico…</div></div></article>
+        <article class="panel model-panel"><div class="panel-head"><div><h2>Distribuição por modelo</h2><p>Participação no consumo total</p></div><span class="panel-tag">TOKENS</span></div><div id="model-bars" class="model-bars"></div></article>
+      </div>
+      <div class="graphs bottom-charts">
+        <article class="panel insight-panel"><div class="panel-head"><div><h2>Onde seus tokens vão</h2><p>Composição do consumo registrado</p></div></div><div id="token-composition"></div><div class="insight-footer" id="insights"></div></article>
+        <article class="panel quota-panel"><div class="panel-head"><div><h2>Janelas de utilização</h2><p>Última telemetria disponível nos logs</p></div><span class="panel-tag">LIMITES</span></div><div id="limits"></div><div class="quota-footnote">Os percentuais são snapshots registrados pelo Codex, não um saldo calculado com tokens.</div></article>
+      </div>
+      <article class="panel recent-panel"><div class="panel-head"><div><h2>Chamadas recentes</h2><p>Inspecione o custo estimado de cada resposta do modelo</p></div><button class="secondary-button" id="go-calls">Ver todas →</button></div><div id="recent-table"></div></article>
+    </section>
+    <section id="prompts" class="page"><article class="panel"><div class="panel-head"><div><h2>Custo por prompt</h2><p>Consolidação das chamadas associadas a cada pedido do usuário</p></div><label class="privacy"><input type="checkbox" id="show-prompts"> Exibir texto dos prompts</label></div><div id="prompts-table"></div></article></section>
+    <section id="calls" class="page"><article class="panel"><div class="panel-head"><div><h2>Chamadas individuais</h2><p>Cada resposta de modelo com contagem de tokens registrada</p></div><span class="panel-tag" id="calls-count">—</span></div><div id="calls-table"></div><div class="pagination"><button class="secondary-button" id="more-calls">Carregar mais</button></div></article></section>
+    <section id="sessions" class="page"><article class="panel"><div class="panel-head"><div><h2>Sessões do Codex</h2><p>Comparação entre projetos, tempo e volume de requisições</p></div></div><div id="sessions-table"></div></article></section>
+    <footer class="footer"><span>Codex Pulse v1.0 · Somente leitura · API-equivalente, não cobrança real</span><a href="https://developers.openai.com/api/docs/pricing" target="_blank" rel="noopener noreferrer">Referência de preços ↗</a></footer>
+  </main>
+</div>
+<div class="drawer-overlay" id="overlay" hidden></div><aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Detalhes da chamada" hidden><div class="drawer-header"><div><div class="eyebrow">DETALHES DO REGISTRO</div><h2 id="drawer-title">Chamada</h2></div><button class="icon-button" id="close-drawer" aria-label="Fechar">✕</button></div><div id="drawer-body" class="drawer-body"></div></aside>
+</body></html>
