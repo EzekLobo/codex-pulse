@@ -40,7 +40,7 @@ FAINT = '#6f839b'
 AMBER = '#ffc87f'
 RED = '#ff9494'
 WIDTH = 426
-HEIGHTS = {'full': 658, 'compact': 256, 'micro': 108}
+HEIGHTS = {'full': 658, 'compact': 256, 'micro': 174}
 MODES = ('full', 'compact', 'micro')
 REFRESH_SECONDS = 6
 PREFS = Path.home() / '.codex-pulse' / 'overlay.json'
@@ -225,7 +225,7 @@ class Overlay:
         self.dashboard_url = None
         self.closed = False
         self.prefs = self.load_prefs()
-        self.mode = self.prefs.get('mode', 'full')
+        self.mode = self.prefs.get('mode', 'micro') if self.prefs.get('discreet_layout') else 'micro'
         if self.mode not in MODES:
             self.mode = 'full'
         self.scope = self.prefs.get('scope', 'today')
@@ -233,7 +233,7 @@ class Overlay:
             self.scope = 'today'
         self.topmost = bool(self.prefs.get('topmost', True))
         self.opacity = clamp(float(self.prefs.get('opacity', args.opacity)), 0.72, 1.0)
-        self.alert_cost = max(0, float(self.prefs.get('alert_cost', .5)))
+        self.alert_cost = max(0, float(self.prefs.get('alert_cost', 0)))
         self.show_prompt = False  # Privacy: never persist a user's prompt visibility.
         self.c = tk.Canvas(root, bg=BG, bd=0, highlightthickness=0)
         self.c.pack(fill='both', expand=True)
@@ -270,7 +270,7 @@ class Overlay:
             PREFS.parent.mkdir(parents=True, exist_ok=True)
             content = {'x': self.root.winfo_x(), 'y': self.root.winfo_y(), 'mode': self.mode,
                        'scope': self.scope, 'topmost': self.topmost, 'opacity': self.opacity,
-                       'alert_cost': self.alert_cost}
+                       'alert_cost': self.alert_cost, 'discreet_layout': True}
             temporary = PREFS.with_suffix('.tmp')
             temporary.write_text(json.dumps(content, indent=2), encoding='utf-8')
             temporary.replace(PREFS)
@@ -280,12 +280,13 @@ class Overlay:
     def place(self, x=None, y=None):
         sw, sh = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
         h = HEIGHTS[self.mode]
+        width = 310 if self.mode == 'micro' else WIDTH
         if x is None or y is None:
-            x, y = max(0, sw-WIDTH-26), 58
+            x, y = max(0, sw-width-18), max(0, sh-h-70)
         x = clamp(int(x), 0, max(0, sw-100))
         y = clamp(int(y), 0, max(0, sh-60))
-        self.root.geometry(f'{WIDTH}x{h}+{x}+{y}')
-        self.c.configure(width=WIDTH, height=h)
+        self.root.geometry(f'{width}x{h}+{x}+{y}')
+        self.c.configure(width=width, height=h)
 
     def save_drag(self, _event=None):
         self.drag_anchor = None
@@ -598,6 +599,9 @@ class Overlay:
         if self.closed:
             return
         self.c.delete('all')
+        if self.mode == 'micro':
+            self.discreet_content()
+            return
         self.header()
         if self.data is None:
             self.c.create_oval(19,73,26,80,fill=AMBER,outline=AMBER)
@@ -622,6 +626,49 @@ class Overlay:
         self.prompt(s)
         self.quota_card(s)
         self.footer(593)
+
+    def discreet_content(self):
+        self.c.create_rectangle(0,0,310,33,fill=BG,outline=BG,tags=('drag',))
+        self.text(12,10,'pulse',11,TEAL,True,tag=('drag',))
+        self.button('pin',188,5,25,23,'●' if self.topmost else '○',self.toggle_pin,TEAL,SURFACE,9)
+        self.button('expand',218,5,25,23,'+',self.cycle_mode,INK,SURFACE,10)
+        self.button('dashboard',248,5,25,23,'↗',self.open_dashboard,TEAL,SURFACE,10)
+        self.button('close',278,5,23,23,'×',self.quit,SUB,SURFACE,10)
+        self.drag_events()
+        if self.data is None:
+            self.text(12,48,'Lendo registros locais…',10,SUB)
+            if self.error:
+                self.text(12,75,'Falha de leitura · tentando novamente',9,AMBER)
+            return
+        latest=max(self.data.get('calls') or [],key=lambda c:c.get('timestamp') or '',default={})
+        model=latest.get('model') or 'Modelo não informado'
+        self.text(12,38,model,10,INK,True,width=285)
+        limits=self.data.get('limits') or {}
+        for index,key in enumerate(('primary','secondary')):
+            raw=limits.get(key) or {}
+            q=quota_info({'timestamp':limits.get('timestamp'),'primary':raw})
+            y=65+index*43
+            label=q['label'] if raw else ('Principal' if index==0 else 'Secundário')
+            value='Não informado' if q['percent'] is None else f"{q['percent']:.0f}% usado"
+            if q['expired']: value='Registro expirado'
+            elif q['stale'] and q['percent'] is not None: value+=' · antigo'
+            color=AMBER if q['stale'] or q['expired'] or (q['percent'] or 0)>=80 else TEAL
+            self.text(12,y,label,9,SUB)
+            self.text(298,y,value,9,color,True,'ne')
+            self.rect(12,y+17,298,y+20,1,EDGE)
+            if q['percent']:
+                self.rect(12,y+17,12+286*q['percent']/100,y+20,1,color)
+            reset=raw.get('resets_at')
+            try:
+                if reset is None and raw.get('resets_in_seconds') is not None and q.get('measured'):
+                    reset=q['measured'].timestamp()+float(raw['resets_in_seconds'])
+                date=datetime.fromtimestamp(float(reset)).strftime('%d/%m %H:%M') if reset is not None else 'não informada'
+            except (ValueError,TypeError,OverflowError,OSError):
+                date='não informada'
+            self.text(12,y+24,'Renova em '+date,8,FAINT)
+        note='Dados fictícios' if self.data.get('demo') else 'Modelo da última chamada · limites registrados'
+        if self.error: note='Falha de leitura · exibindo último registro'
+        self.text(12,156,note,8,FAINT)
 
 
 def run(argv=None):
